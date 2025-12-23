@@ -1,45 +1,39 @@
 import streamlit as st
 import google.generativeai as genai
 
-# ڕێکخستنی لاپەڕە بۆ سووکی و خێرایی
-st.set_page_config(page_title="داڕێژەری خێرا", layout="centered")
+# ڕێکخستنی سەرەتایی بۆ ئەوپەڕی خێرایی
+st.set_page_config(page_title="Fast Kurdish AI", layout="centered")
 
-# ستایلێکی سادە بۆ ڕاست بۆ چەپ
-st.markdown("""<style> .stTextArea textarea {direction: rtl; text-align: right;} .stMarkdown {direction: rtl; text-align: right;} </style>""", unsafe_allow_html=True)
-
-# کلیلەکە لێرە دابنێ
+# کلیلەکەت لێرە دابنێ
 API_KEY = "کلیلەکەی_خۆت_لێرە_دابنێ"
 genai.configure(api_key=API_KEY)
 
-# بەکارهێنانی مۆدێلی Flash کە بۆ "خێرایی" دروست کراوە
-model = genai.GenerativeModel('gemini-1.5-flash')
+# بەکارهێنانی خێراترین مۆدێلی جیهان (Flash-8B)
+model = genai.GenerativeModel('gemini-1.5-flash-8b')
 
-st.title("⚡ داڕێژەری کوردی خێرا")
+st.markdown("<h1 style='text-align: center;'>⚡ داڕێژەری خێرای کوردی</h1>", unsafe_allow_html=True)
 
-# بەشی تێکست (گرنگترین بەش بۆ تۆ)
-user_input = st.text_area("دەقەکە لێرە دابنێ:", height=250)
+# خانەی نووسین
+user_input = st.text_area("دەقەکە لێرە دابنێ:", height=250, help="ڕاپۆرت یان هەواڵەکە لێرە کۆپی بکە")
 
-if st.button("🚀 دەستبەجێ دایبڕێژەوە"):
+if st.button("🚀 دەستبەجێ چاکی بکە"):
     if user_input:
-        # دروستکردنی شوێنی بەتاڵ بۆ وەڵامەکە بۆ ئەوەی یەکسەر دەربکەوێت
+        # پیشاندانی ئەنجام بە شێوەی پیت بە پیت (Streaming)
         with st.chat_message("assistant"):
-            response_placeholder = st.empty()
-            full_response = ""
-            
-            # پرۆمپتی کورت و خێرا
-            prompt = f"ئەم دەقە بە کوردییەکی پاراو و بە خاڵبەندییەوە دابڕێژەوە: {user_input}"
+            output_placeholder = st.empty()
+            full_text = ""
             
             try:
-                # بەکارهێنانی stream=True واتا پیت بە پیت وەڵام بدەرەوە بێ وەستان
-                responses = model.generate_content(prompt, stream=True)
+                # پرۆمپتی کورت بۆ ئەوەی مۆدێلەکە کاتی تێنەچێت
+                prompt = f"وەک پسپۆڕێکی زمان، ئەم دەقە کوردییە بە پاراوی و خاڵبەندییەوە دابڕێژەوە:\n\n{user_input}"
                 
-                for chunk in responses:
-                    full_response += chunk.text
-                    response_placeholder.markdown(full_response)
+                # وەڵامدانەوەی دەستبەجێ
+                response = model.generate_content(prompt, stream=True)
+                
+                for chunk in response:
+                    full_text += chunk.text
+                    output_placeholder.markdown(full_text)
             except Exception as e:
-                st.error("کێشەیەک لە پەیوەندی دروست بوو، تکایە جارێکی تر کلیک بکەرەوە.")
+                st.error("کێشەیەک لە پەیوەندی هەیە. تکایە دووبارە کلیک بکە.")
     else:
         st.warning("تکایە دەقێک بنووسە.")
-
-st.divider()
-st.caption("ئەم سیستمە ڕاستەوخۆ بە گوگلەوە بەستراوە بۆ ئەوپەڕی خێرایی.")
